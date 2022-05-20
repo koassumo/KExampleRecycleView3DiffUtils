@@ -5,25 +5,54 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
 import com.example.kexamplerecycleview3diffutils.R
 import com.example.kexamplerecycleview3diffutils.model.entity.Note
 
 
-class NotesRvAdapter() : RecyclerView.Adapter<NotesRvAdapter.ViewHolder> () {
+// ---1--- Дописываем новый класс, который будет организовывать сравнение
+class MyDiffUtilCallback(
+    private val oldList: List<Note>,
+    private val newList: List<Note>,
+) : DiffUtil.Callback() {
 
-    var notes: List<Note> = listOf()
-    set (value){
-        field = value
-        notifyDataSetChanged()
+    override fun getOldListSize(): Int = oldList.size
+    override fun getNewListSize(): Int = newList.size
+
+    override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+        val oldItem = oldList[oldItemPosition]
+        val newItem = newList[oldItemPosition]
+        return oldItem.mTitle == newItem.mTitle
     }
+
+    override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+        val oldItem = oldList[oldItemPosition]
+        val newItem = newList[oldItemPosition]
+        return oldItem.mTitle == newItem.mTitle
+    }
+}
+
+
+class NotesRvAdapter : RecyclerView.Adapter<NotesRvAdapter.ViewHolder>() {
+
+    // ---2--- Изменяем set для списка, т.е. новый список не сразу будет закидываться в поле,
+    //         а сначала будет произведено сравнение со старым списком
+    var notes: List<Note> = listOf()
+        set(newValue) {
+            val diffCallBack = MyDiffUtilCallback (field, newValue)
+            val diffResult = DiffUtil.calculateDiff(diffCallBack)
+            field = newValue
+            diffResult.dispatchUpdatesTo(this@NotesRvAdapter)
+        }
+
 
     // 0. Определяем CLASS ViewHolder
     // т.е. это связь/установка соответствий с макетным файлом itemView (здесь - item_note.xml)
     // т.е. по принципу 'view from xml' = 'data from Note'
     // Самих данных пока нет, только шаблон.
-    inner class ViewHolder(itemView: View): RecyclerView.ViewHolder(itemView) {
+    inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         fun bind(note: Note) {
             itemView.findViewById<TextView>(R.id.tv_title).text = note.mTitle
             itemView.findViewById<TextView>(R.id.tv_text).text = note.avatarUrl
@@ -32,11 +61,11 @@ class NotesRvAdapter() : RecyclerView.Adapter<NotesRvAdapter.ViewHolder> () {
             // при этом предварительно найти все вьюшки (как в java) здесь не требуется,
             // (но - это расход ресурсов, поэтому нужно как-то закэшировать)
 
-        //      P.S. визуально красивее через with (хотя ... ну, не знаю)
-        //        fun bind1(note: Note) = with(itemView){
-        //            tv_title.text = note.mTitle
-        //            tv_text.text = note.mText
-        //            setBackgroundColor(note.mColor)
+            //      P.S. визуально красивее через with (хотя ... ну, не знаю)
+            //        fun bind1(note: Note) = with(itemView){
+            //            tv_title.text = note.mTitle
+            //            tv_text.text = note.mText
+            //            setBackgroundColor(note.mColor)
         }
     }
 
