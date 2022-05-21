@@ -13,12 +13,14 @@ import com.example.kexamplerecycleview3diffutils.model.entity.Note
 
 
 // ---1--- Дописываем новый класс, который будет организовывать сравнение
+
 class MyDiffUtilCallback(
     private val oldList: List<Note>,
     private val newList: List<Note>,
 ) : DiffUtil.Callback() {
 
     override fun getOldListSize(): Int = oldList.size
+
     override fun getNewListSize(): Int = newList.size
 
     override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
@@ -37,8 +39,6 @@ class MyDiffUtilCallback(
 
 class NotesRvAdapter : RecyclerView.Adapter<NotesRvAdapter.ViewHolder>() {
 
-    // ---2--- Изменяем set для списка, т.е. новый список не сразу будет закидываться в поле,
-    //         а сначала будет произведено сравнение со старым списком
     var notes: List<Note> = listOf()
         set(newValue) {
             val diffCallBack = MyDiffUtilCallback (field, newValue)
@@ -57,19 +57,10 @@ class NotesRvAdapter : RecyclerView.Adapter<NotesRvAdapter.ViewHolder>() {
             itemView.findViewById<TextView>(R.id.tv_title).text = note.mTitle
             itemView.findViewById<TextView>(R.id.tv_text).text = note.avatarUrl
             itemView.findViewById<ImageView>(R.id.iv_avatar).load(R.drawable.ic_launcher_foreground)
-            // На вход конструктор (?) берет переданную ItemView и разбираем ее на составные части
-            // при этом предварительно найти все вьюшки (как в java) здесь не требуется,
-            // (но - это расход ресурсов, поэтому нужно как-то закэшировать)
-
-            //      P.S. визуально красивее через with (хотя ... ну, не знаю)
-            //        fun bind1(note: Note) = with(itemView){
-            //            tv_title.text = note.mTitle
-            //            tv_text.text = note.mText
-            //            setBackgroundColor(note.mColor)
         }
     }
 
-    // Далее переопределяем ТРИ обязательных метода:
+// Далее переопределяем ТРИ обязательных метода:
 
     // 1. Создаем каждый конкретный новый экземпляр viewHolder
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder =
@@ -86,8 +77,8 @@ class NotesRvAdapter : RecyclerView.Adapter<NotesRvAdapter.ViewHolder>() {
 
 
     fun updateNote(newNotes: List<Note>) {
+//ВНИМАНИЕ на изменение этой строчки
         this.notes = newNotes
-//        notifyDataSetChanged()  - тут не нужно, т.к. определен в
     }
 
 }
